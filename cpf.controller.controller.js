@@ -1,46 +1,69 @@
-function validarCpfSimples(cpfOrginal) {
-    if(!cpfOrginal) return{valido: false, mensagem: "CPF não informado" };
+//===========================================================//
+// 1. FUNÇÕES AUXILIARES / UTILITÁRIAS (Ficam fora do controller)
+//===========================================================//
 
-    //1.remove caracteres numericos
-    const apenasNumeros = String(cpfOrginal).replace(/\D/g, '');
+function validarCpfSimples(cpfOriginal) {
+    if(!cpfOriginal) return { valido: false, motivo:'CPF não foi informado'};
     
+    // 1. Remove caracteres especiais (pontos e traço), deixando apenas números
+    // replace = trocar
+    // \/D/g (Expressão regular)
+    // \D significa qualquer caractere que não seja um dígito numérico
+    // / ... / As barras no inicio e no fim servem para delimitar onde começa e termina a expressão regular do Javascript
+    // g é a flag global. Ela diz ao javascript para substituir todas as ocorrências
+    const apenasNumeros = String(cpfOriginal).replace(/\D/g, '');
+    "11111111111"
 
-    //2.Verifica se o CPF tem 11 digitos
-    if(apenasNumeros.length !== 11) return {valido: false, 
-        mensagem: `CPF deve ter 11 digitos (você digitou ${apenasNumeros.length})`};
+    // 2. Verifica se possui exatamente 11 dígitos
+    if (apenasNumeros.length !== 11){
+        return {
+            valido: false,
+            motivo: `O CPF deve ter 11 dígitos (você enviou ${apenasNumeros.length})`
+        }
+    }
 
-    //3.Verifica se todos os digitos são iguais
-     if (todosIguais = /^(\d)\1{10}$/.test(apenasNumeros)) {
-         return {valido: false, mensagem: "CPF não pode ter todos os digitos iguais"};
-     }
-     return {
-         valido: false, mensagem: "CPF inválido: todos os dígitos são iguais"}
-      }
+    // 3. Verifica se todos os dígitos são iguais (ex: 111.111.111-11) é inválido
+    const todosIguais = /^(\d)\1{10}\$/.test(apenasNumeros);
+    if (todosIguais) {
+        return { valido: false, motivo: 'CPF com todos os dígitos iguais  é inválido.'};
+    }
 
-      return{
-        valido:true,
-        mensagem: 'CPF possui formato válido',
-        cpflimpo: apenasNumeros
-      }
-    const cpfController = {
-    //metodo 1
-        receberCPF: (req, res) => {
-            //LIGAÇÃO: a função receberCPF é chamada quando a rota POST /cpf é acessada, e ela recebe os dados do corpo da requisição (req.body) e envia uma resposta (res.json) de volta ao cliente.
-            const { cpf } = req.body;
-            return res.json({
+    return {
+        valido: true,
+        motivo: 'CPF possui formato e tamanho válidos!',
+        cpfLimpo: apenasNumeros
+    }
+                                            
+}
+
+//=========================================================//
+// 2. OBJETO DO CONTROLLER (Contém os metodos chamados pelas rotas)
+//=========================================================//
+const cpfController = {
+    // Método 1 = Apenas recebe e confirma
+    recebeCpf: (req, res) =>{
+        const { cpf } = req.body
+
+        return res.json({
             sucesso: true,
-            mensagem: 'CPF recebido com sucesso',
-            cpfOriginal: cpf,
-            mensagem: resultado.motivo
-        })
-        if (!resultadoValidacao.valido) {
+            mensagem: 'CPF recebido no Controller com sucesso!',
+            cpfEnviado: cpf
+        });
+    },
+    // Método 2: Recebe e valida usando a função auxiliar 
+    validarCpf: (req, res) =>{
+        const { cpf } = req.body
+        // LIGAÇÃO: A função do controller CHAMA a função auxiliar criada lá no topo!
+        const resultado = validarCpfSimples(cpf);
+        if (!resultado.valido){
             return res.status(400).json({
-                status: 'erro',
-                valido: false,
-                cpfEnviado: cpf,
+                status:'erro',
+                valido:false,
+                cpfEnviado:cpf,
                 mensagem: resultado.motivo
-            });
+            })
         }
     }
 }
+
 module.exports = cpfController;
